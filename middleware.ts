@@ -3,7 +3,6 @@ import { jwtVerify } from 'jose'
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'SUPER_SECRET_KEY')
 
-// Fungsi verifikasi token
 async function verifyToken(token?: string) {
     if (!token) return null
     try {
@@ -16,27 +15,46 @@ async function verifyToken(token?: string) {
 
 export async function middleware(request: NextRequest) {
     const token = request.cookies.get('token')?.value
-    const url = request.nextUrl
-    const { pathname } = url
-
-    const isAuthPage = pathname.startsWith('/auth')
-    const isDashboardPage = pathname.startsWith('/dashboard')
+    const { pathname } = request.nextUrl
 
     const user = await verifyToken(token)
 
-    if (isAuthPage) {
-        // Kalau sudah login, lempar ke dashboard
+    // Bypass public pages
+    if (pathname.startsWith('/auth')) {
         if (user) {
             return NextResponse.redirect(new URL('/dashboard', request.url))
         }
         return NextResponse.next()
     }
 
-    if (isDashboardPage) {
-        // Kalau belum login, lempar ke login
+    // Protect all /dashboard routes
+    if (pathname.startsWith('/dashboard')) {
         if (!user) {
             return NextResponse.redirect(new URL('/auth/login', request.url))
         }
+
+        // Role-based protection
+        if (
+            pathname.startsWith('/dashboard/admin') &&
+            user.role !== 'admin'
+        ) {
+            return NextResponse.redirect(new URL('/dashboard', request.url))
+        }
+
+        if (
+            pathname.startsWith('/dashboard/owner') &&
+            user.role !== 'owner'
+        ) {
+            return NextResponse.redirect(new URL('/dashboard', request.url))
+        }
+
+        if (
+            pathname.startsWith('/dashboard/user') &&
+            user.role !== 'user'
+        ) {
+            return NextResponse.redirect(new URL('/dashboard', request.url))
+        }
+
         return NextResponse.next()
     }
 
