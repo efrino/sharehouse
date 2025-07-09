@@ -2,23 +2,20 @@
 
 import { useEffect, useState } from 'react'
 
-type UserProfile = {
-  email: string
-  fullName: string
-  phone?: string
-}
-
 export default function UserSettingPage() {
-  const [user, setUser] = useState<UserProfile | null>(null)
+  const [email, setEmail] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Simulasi fetching data user
     setTimeout(() => {
-      setUser({
-        email: 'user@example.com',
-        fullName: 'Zahrah Thalib',
-        phone: '081234567890',
-      })
+      setEmail('user@example.com')
+      setFullName('Zahrah Thalib')
+      setPhone('081234567890')
+      setLoading(false)
     }, 1000)
   }, [])
 
@@ -27,8 +24,7 @@ export default function UserSettingPage() {
       <h1 className="text-2xl font-semibold mb-6">Pengaturan Akun</h1>
 
       <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-md space-y-4">
-        {!user ? (
-          // Skeleton
+        {loading ? (
           <div className="animate-pulse space-y-4">
             {[...Array(3)].map((_, idx) => (
               <div key={idx}>
@@ -40,13 +36,12 @@ export default function UserSettingPage() {
             <div className="h-10 bg-gray-200 rounded" />
           </div>
         ) : (
-          // User Form
           <>
             <div>
               <label className="block text-sm font-medium mb-1">Email</label>
               <input
                 type="email"
-                value={user.email}
+                value={email}
                 readOnly
                 className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
               />
@@ -56,7 +51,8 @@ export default function UserSettingPage() {
               <label className="block text-sm font-medium mb-1">Nama Lengkap</label>
               <input
                 type="text"
-                value={user.fullName}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 className="w-full p-2 border rounded"
               />
             </div>
@@ -65,7 +61,8 @@ export default function UserSettingPage() {
               <label className="block text-sm font-medium mb-1">No. HP</label>
               <input
                 type="tel"
-                value={user.phone || ''}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="w-full p-2 border rounded"
               />
             </div>
@@ -77,6 +74,8 @@ export default function UserSettingPage() {
               <input
                 type="password"
                 placeholder="Password baru"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full p-2 border rounded"
               />
             </div>
