@@ -2,12 +2,17 @@
 
 import { useEffect, useState } from 'react'
 
+type PaymentMethod = 'Transfer' | 'Cash'
+type PaymentChannel = 'BCA' | 'Mandiri' | 'OVO' | 'Gopay' | 'Dana' | ''
+
 type PaymentRecord = {
   userName: string
   roomName: string
   amount: number
   dueDate: string
   status: 'Lunas' | 'Belum Bayar'
+  paymentMethod: PaymentMethod
+  paymentChannel: PaymentChannel
 }
 
 export default function ManagePaymentPage() {
@@ -23,6 +28,8 @@ export default function ManagePaymentPage() {
           amount: 750000,
           dueDate: '2025-08-01',
           status: 'Belum Bayar',
+          paymentMethod: 'Transfer',
+          paymentChannel: 'BCA',
         },
         {
           userName: 'Siti Aminah',
@@ -30,6 +37,8 @@ export default function ManagePaymentPage() {
           amount: 850000,
           dueDate: '2025-07-28',
           status: 'Lunas',
+          paymentMethod: 'Cash',
+          paymentChannel: '',
         },
         {
           userName: 'Rizky Hidayat',
@@ -37,6 +46,8 @@ export default function ManagePaymentPage() {
           amount: 700000,
           dueDate: '2025-08-05',
           status: 'Belum Bayar',
+          paymentMethod: 'Transfer',
+          paymentChannel: 'Dana',
         },
       ])
       setLoading(false)
@@ -55,6 +66,8 @@ export default function ManagePaymentPage() {
               <th className="px-4 py-3 text-left font-medium text-gray-700">Jumlah</th>
               <th className="px-4 py-3 text-left font-medium text-gray-700">Tenggat</th>
               <th className="px-4 py-3 text-left font-medium text-gray-700">Status</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-700">Metode</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-700">Channel</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -66,6 +79,8 @@ export default function ManagePaymentPage() {
                   <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-20" /></td>
                   <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-24" /></td>
                   <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-16" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-20" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-20" /></td>
                 </tr>
               ))
             ) : (
@@ -86,6 +101,8 @@ export default function ManagePaymentPage() {
                       {payment.status}
                     </span>
                   </td>
+                  <td className="px-4 py-3">{payment.paymentMethod}</td>
+                  <td className="px-4 py-3">{payment.paymentMethod === 'Transfer' ? payment.paymentChannel : '-'}</td>
                 </tr>
               ))
             )}

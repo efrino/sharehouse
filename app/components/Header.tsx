@@ -2,12 +2,15 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function Header() {
-    const [user, setUser] = useState<null | { role: string; email: string }>()
+    const [user, setUser] = useState<null | { role: string; email: string }>(null)
     const [routes, setRoutes] = useState<string[]>([])
     const [open, setOpen] = useState(false)
+
     const dropdownRef = useRef<HTMLDivElement>(null)
+    const router = useRouter()
 
     const routeLabelMap: Record<string, string> = {
         users: 'Kelola Pengguna',
@@ -53,11 +56,29 @@ export default function Header() {
     }
 
     return (
-        <header className="bg-white shadow py-4 px-6 flex justify-between items-center">
+        <header className="bg-white shadow py-4 px-6 flex flex-wrap gap-4 justify-between items-center">
+            {/* Logo */}
             <Link href="/" className="text-xl font-bold text-blue-600">
                 Kosku Semarang
             </Link>
 
+            {/* Bagian pencarian & filter dinonaktifkan karena tidak berkaitan dengan API nav */}
+            {/* 
+            const [search, setSearch] = useState('')
+            const [provinsi, setProvinsi] = useState('semua')
+            const [kota, setKota] = useState('')
+            const [area, setArea] = useState('')
+            const [gender, setGender] = useState('')
+            const [harga, setHarga] = useState('')
+            const [fasilitas, setFasilitas] = useState<string[]>([])
+            const fasilitasList = [...]
+            const provinsiData = {...}
+            const areaData = {...}
+            const handleFasilitasChange = () => {...}
+            const handleSearch = () => {...}
+            */}
+
+            {/* User Navigation */}
             <nav className="flex gap-4 items-center relative">
                 {user ? (
                     <>
@@ -91,7 +112,6 @@ export default function Header() {
                                             {routeLabelMap[route] || route.replace(/-/g, ' ')}
                                         </Link>
                                     ))}
-
                                     <button
                                         onClick={handleLogout}
                                         className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
