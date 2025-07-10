@@ -5,34 +5,47 @@ import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import 'leaflet/dist/leaflet.css'
+import { supabase } from '../lib/supabaseClient'
 import KosList from './components/KosList'
 import { KampusType } from './types'
 
-// Import peta secara dinamis agar tidak error saat server-side render
+// Dynamic Map component
 const MapWithMarkers = dynamic(() => import('./components/MapWithMarkers'), {
   ssr: false,
 })
 
 const images = ['/kos3.png', '/kos1.png', '/kos2.png']
 
-// Daftar kampus untuk inisialisasi state
-const kampusList: KampusType[] = [
-  { label: 'UNDIP', value: 'undip', coords: [-7.0545, 110.4228] },
-  { label: 'UNNES', value: 'unnes', coords: [-6.9936, 110.3401] },
-  { label: 'UNIKA', value: 'unika', coords: [-7.0084, 110.4148] },
-  { label: 'POLINES', value: 'polines', coords: [-7.0489, 110.4392] },
-  { label: 'UDINUS', value: 'udinus', coords: [-6.9836, 110.4091] },
-]
-
 export default function Home() {
   const [index, setIndex] = useState(0)
-  const [selectedKampus, setSelectedKampus] = useState<KampusType>(kampusList[0])
+  const [kampusList, setKampusList] = useState<KampusType[]>([])
+  const [selectedKampus, setSelectedKampus] = useState<KampusType | null>(null)
 
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % images.length)
     }, 5000)
     return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    async function fetchUniversities() {
+      const { data, error } = await supabase.from('universities').select('*')
+      if (error) {
+        console.error('Gagal mengambil universitas:', error)
+        return
+      }
+
+      const kampusData: KampusType[] = data.map((u: any) => ({
+        label: u.name,
+        value: u.id,
+        coords: [u.lat, u.lon],
+      }))
+      setKampusList(kampusData)
+      setSelectedKampus(kampusData[0])
+    }
+
+    fetchUniversities()
   }, [])
 
   return (
@@ -66,8 +79,8 @@ export default function Home() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.8 }}
         >
-          Platform modern untuk pencari kos, pemilik kos, dan admin pengelola.
-          Akses mudah, informasi lengkap, dan terpercaya.
+          Platform modern untuk pencari kos, pemilik kos, dan admin pengelola. Akses mudah,
+          informasi lengkap, dan terpercaya.
         </motion.p>
 
         <motion.div
@@ -77,7 +90,7 @@ export default function Home() {
           transition={{ delay: 0.6, duration: 0.8 }}
         >
           <a
-            href="/kos"
+            href="#lokasi"
             className="bg-white text-black px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition"
           >
             Lihat Kos
@@ -91,8 +104,9 @@ export default function Home() {
         </motion.div>
       </div>
 
-      {/* Peta lokasi */}
+      {/* Peta lokasi & kos */}
       <motion.div
+        id="lokasi"
         className="relative z-10 max-w-5xl mx-auto mt-32 p-4"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -106,11 +120,16 @@ export default function Home() {
           Jelajahi kos-kosan di dekat kampus ternama seperti UNDIP, UNNES, dan lainnya.
         </p>
 
-        <MapWithMarkers
-          selectedKampus={selectedKampus}
-          setSelectedKampus={setSelectedKampus}
-        />
-        <KosList kampus={selectedKampus.value} />
+        {selectedKampus && kampusList.length > 0 && (
+          <>
+            <MapWithMarkers
+              selectedKampus={selectedKampus}
+              setSelectedKampus={setSelectedKampus}
+              kampusList={kampusList}
+            />
+            <KosList kampusId={selectedKampus.value} />
+          </>
+        )}
       </motion.div>
     </div>
   )
