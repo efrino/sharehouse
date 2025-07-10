@@ -1,39 +1,42 @@
+// app/components/KosList.tsx
 'use client'
 
-import { kosList } from '../data/kos'
-import Image from 'next/image'
+import { useEffect, useState } from 'react'
 
-export default function KosList({ kampus }: { kampus: string }) {
-    const filteredKos = kosList.filter((kos) => kos.kampus === kampus)
+type KostType = {
+    id: string
+    name: string
+    price: number
+    stars: number
+    distance_km: number
+}
 
-    if (filteredKos.length === 0) {
-        return (
-            <p className="text-center text-gray-300 mt-8">
-                Belum ada kos untuk kampus ini.
-            </p>
-        )
-    }
+export default function KosList({ kampusId }: { kampusId: string }) {
+    const [kostList, setKostList] = useState<KostType[]>([])
+
+    useEffect(() => {
+        async function fetchKost() {
+            const res = await fetch(`/api/kost/nearby?univId=${kampusId}`)
+            const data = await res.json()
+            setKostList(data)
+        }
+
+        if (kampusId) fetchKost()
+    }, [kampusId])
 
     return (
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mt-8">
-            {filteredKos.map((kos) => (
-                <div
-                    key={kos.id}
-                    className="bg-white text-black rounded-xl overflow-hidden shadow-md"
-                >
-                    <Image
-                        src={kos.gambar}
-                        alt={kos.nama}
-                        width={400}
-                        height={240}
-                        className="w-full h-48 object-cover"
-                    />
-                    <div className="p-4">
-                        <h3 className="text-lg font-bold mb-2">{kos.nama}</h3>
-                        <p className="text-sm text-gray-600">{kos.harga}</p>
+        <div className="mt-8">
+            <h3 className="text-xl font-semibold text-white mb-4">Kos Terdekat</h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {kostList.map((kost) => (
+                    <div key={kost.id} className="bg-white text-black p-4 rounded shadow">
+                        <h4 className="font-semibold">{kost.name}</h4>
+                        <p className="text-sm text-gray-600">Rp {kost.price.toLocaleString()}</p>
+                        <p className="text-sm">⭐ {kost.stars || 0}</p>
+                        <p className="text-sm text-blue-600">{kost.distance_km.toFixed(2)} km dari kampus</p>
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     )
 }

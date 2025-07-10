@@ -2,40 +2,23 @@
 
 import { useEffect, useState } from 'react'
 
-type Booking = {
-  id: string
-  namaKos: string
-  alamat: string
-  tanggalMasuk: string
-  durasi: string
-  status: 'pending' | 'approved' | 'rejected'
-}
-
-export default function HistoryPage() {
-  const [data, setData] = useState<Booking[] | null>(null)
+export default function BookingHistory() {
+  const [history, setHistory] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Simulasi fetching data
-    setTimeout(() => {
-      setData([
-        {
-          id: '1',
-          namaKos: 'Kos Mawar Indah',
-          alamat: 'Jl. Melati No. 17, Semarang',
-          tanggalMasuk: '2024-07-01',
-          durasi: '6 bulan',
-          status: 'approved',
-        },
-        {
-          id: '2',
-          namaKos: 'Kos Putra Harmoni',
-          alamat: 'Jl. Anggrek No. 5, Semarang',
-          tanggalMasuk: '2024-01-15',
-          durasi: '3 bulan',
-          status: 'rejected',
-        },
-      ])
-    }, 1200)
+    async function fetchBooking() {
+      try {
+        const res = await fetch('/api/user/kost/history')
+        const json = await res.json()
+        setHistory(json || [])
+      } catch (err) {
+        console.error('Gagal fetch riwayat pemesanan:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchBooking()
   }, [])
 
   return (
@@ -43,8 +26,7 @@ export default function HistoryPage() {
       <h1 className="text-2xl font-semibold mb-6">Riwayat Pemesanan Kos</h1>
 
       <div className="space-y-4">
-        {!data ? (
-          // SKELETON LOADING
+        {loading ? (
           Array.from({ length: 2 }).map((_, i) => (
             <div
               key={i}
@@ -56,10 +38,10 @@ export default function HistoryPage() {
               <div className="h-8 w-24 bg-gray-200 rounded mt-2" />
             </div>
           ))
-        ) : data.length === 0 ? (
+        ) : history.length === 0 ? (
           <p className="text-gray-500">Belum ada riwayat pemesanan.</p>
         ) : (
-          data.map((item) => (
+          history.map((item) => (
             <div
               key={item.id}
               className="bg-white p-4 rounded shadow-md space-y-1 border-l-4"
@@ -68,28 +50,27 @@ export default function HistoryPage() {
                   item.status === 'approved'
                     ? '#16a34a'
                     : item.status === 'pending'
-                    ? '#facc15'
-                    : '#dc2626',
+                      ? '#facc15'
+                      : '#dc2626',
               }}
             >
-              <h2 className="text-lg font-semibold">{item.namaKos}</h2>
-              <p className="text-sm text-gray-600">{item.alamat}</p>
-              <p className="text-sm">Tanggal Masuk: {item.tanggalMasuk}</p>
-              <p className="text-sm">Durasi: {item.durasi}</p>
+              <h2 className="text-lg font-semibold">{item.kost?.name}</h2>
+              <p className="text-sm text-gray-600">{item.kost?.address || 'Alamat tidak tersedia'}</p>
+              <p className="text-sm">Tanggal Masuk: {item.start_date}</p>
+              <p className="text-sm">Durasi: {item.duration} bulan</p>
               <span
-                className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
-                  item.status === 'approved'
+                className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${item.status === 'approved'
                     ? 'bg-green-100 text-green-700'
                     : item.status === 'pending'
-                    ? 'bg-yellow-100 text-yellow-700'
-                    : 'bg-red-100 text-red-700'
-                }`}
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}
               >
                 {item.status === 'approved'
                   ? 'Disetujui'
                   : item.status === 'pending'
-                  ? 'Menunggu'
-                  : 'Ditolak'}
+                    ? 'Menunggu'
+                    : 'Ditolak'}
               </span>
             </div>
           ))

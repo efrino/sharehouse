@@ -2,7 +2,7 @@
 
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Select from 'react-select'
 import { KampusType } from '../types'
 
@@ -12,14 +12,6 @@ L.Icon.Default.mergeOptions({
     iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
 })
-
-const kampus: KampusType[] = [
-    { label: 'UNDIP', value: 'undip', coords: [-7.0545, 110.4228] },
-    { label: 'UNNES', value: 'unnes', coords: [-6.9936, 110.3401] },
-    { label: 'UNIKA', value: 'unika', coords: [-7.0084, 110.4148] },
-    { label: 'POLINES', value: 'polines', coords: [-7.0489, 110.4392] },
-    { label: 'UDINUS', value: 'udinus', coords: [-6.9836, 110.4091] },
-]
 
 function FlyToKampus({ coords }: { coords: [number, number] }) {
     const map = useMap()
@@ -38,15 +30,39 @@ export default function MapWithMarkers({
     selectedKampus: KampusType
     setSelectedKampus: (kampus: KampusType) => void
 }) {
+    const [kampusList, setKampusList] = useState<KampusType[]>([])
+
+    useEffect(() => {
+        async function fetchUniversities() {
+            try {
+                const res = await fetch('/api/universities')
+                const data = await res.json()
+                const kampusData = data.map((item: any) => ({
+                    label: item.name,
+                    value: item.id,
+                    coords: [item.lat, item.lon] as [number, number],
+                }))
+                setKampusList(kampusData)
+                if (kampusData.length > 0 && !selectedKampus) {
+                    setSelectedKampus(kampusData[0])
+                }
+            } catch (err) {
+                console.error('Gagal mengambil universitas:', err)
+            }
+        }
+
+        fetchUniversities()
+    }, [setSelectedKampus])
+
     return (
         <div className="space-y-4">
             {/* Dropdown Filter */}
             <Select
-                options={kampus}
+                options={kampusList}
                 value={selectedKampus}
-                onChange={(selected) => setSelectedKampus(selected!)}
+                onChange={(selected) => selected && setSelectedKampus(selected)}
                 className="text-black"
-                menuPlacement="top" // 💡 Agar dropdown membuka ke atas
+                menuPlacement="top"
                 styles={{
                     control: (base) => ({
                         ...base,
@@ -70,15 +86,14 @@ export default function MapWithMarkers({
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
 
-                {/* Marker semua kampus */}
-                {kampus.map((item, i) => (
-                    <Marker key={i} position={item.coords}>
-                        <Popup>{item.label}</Popup>
+                {kampusList.map((kampus, i) => (
+                    <Marker key={i} position={kampus.coords}>
+                        <Popup>{kampus.label}</Popup>
                     </Marker>
                 ))}
 
-                {/* Fly to selected */}
-                <FlyToKampus coords={selectedKampus.coords} />
+                {/* Auto fly to selected kampus */}
+                {selectedKampus && <FlyToKampus coords={selectedKampus.coords} />}
             </MapContainer>
         </div>
     )
